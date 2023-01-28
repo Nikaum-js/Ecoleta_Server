@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import knex from "../database/connection";
 
 class PointsController {
-  async index(request: Request, response: Response) {
+  async indexFiltrados(request: Request, response: Response) {
     const { city, uf, items } = request.query
 
     const parsedItems = String(items)
@@ -20,6 +20,12 @@ class PointsController {
     return response.json(points)
   }
 
+  async index(request: Request, response: Response) {
+    const points = await knex('points')
+
+    return response.json(points)
+  }
+
   async create(request: Request, response: Response) {
     const {
       name,
@@ -32,8 +38,6 @@ class PointsController {
       items
     } = request.body
 
-    const trx = await knex.transaction();
-
     const point = {
       image: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=60',
       name,
@@ -45,7 +49,7 @@ class PointsController {
       uf,
     }
 
-    const insertedIds = await trx('points').insert(point)
+    const insertedIds = await knex('points').insert(point)
 
     const point_id = insertedIds[0]
 
@@ -56,9 +60,7 @@ class PointsController {
       }
     })
 
-    await trx('point_items').insert(pointItems)
-
-    await trx.commit();
+    await knex('point_items').insert(pointItems)
 
     return response.json({
       id: point_id,
